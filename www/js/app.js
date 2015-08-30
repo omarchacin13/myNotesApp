@@ -1,50 +1,30 @@
 (function() {
 
-  var notes = [
-    {
-      id: '1',
-      title: 'First note',
-      description: 'This is my first note'
-    },
-    {
-      id: '2',
-      title: 'Secondnote',
-      description: 'This is my second note'
-    }
-  ];
 
-  function getNote(noteId) {
-    for (var i=0; i < notes.length; i++) {
-      if (notes[i].id === noteId) {
-        return notes[i]
-      }
-    }
-    return undefined;
-  }
+  angular.module('groceryList', ['ionic', 'firebase', 'mynotes.noteStore' ])
 
-  function updateNote(note) {
-    console.log('new note ', note);
-    for (var i=0; i < notes.length; i++) {
-      if (notes[i].id === note.id) {
-        notes[i] = note;
-        return
-      }
-    }
-  }
-
-  angular.module('starter', ['ionic'])
+    .constant('FURL', 'https://groceries-reminder.firebaseio.com/')
 
     .config(function($stateProvider, $urlRouterProvider) {
       $stateProvider
         .state('list', {
           url:'/list',
-          templateUrl: 'templates/list.html'
+          templateUrl: 'templates/list.html',
+          controller: 'ListCtrl'
         });
 
       $stateProvider
         .state('edit', {
           url:'/edit/:noteId',
-          templateUrl: 'templates/edit.html'
+          templateUrl: 'templates/edit.html',
+          controller: 'EditCtrl'
+        });
+
+      $stateProvider
+        .state('add', {
+          url:'/add',
+          templateUrl: 'templates/edit.html',
+          controller: 'AddCtrl'
         });
 
 
@@ -52,17 +32,47 @@
 
     })
 
-    .controller('ListCtrl', function ($scope) {
-        $scope.notes = notes;
+    .controller('ListCtrl', function ($scope, NoteStore) {
+
+      $scope.reordering = false;
+      $scope.notes = NoteStore.list();
+
+      $scope.remove = function (noteId) {
+        $scope.note = NoteStore.getNote(noteId);
+        NoteStore.remove($scope.note);
+      };
+
+      $scope.move = function (note, fromIndex, toIndex) {
+        NoteStore.move(note, fromIndex, toIndex)
+      };
+
+      $scope.toggleReordering = function () {
+        $scope.reordering = !$scope.reordering;
+      }
     })
 
-    .controller('EditCtrl', function ($scope, $stateParams, $state) {
+    .controller('EditCtrl', function ($scope, $stateParams, $state, NoteStore) {
+
       $scope.noteId = $stateParams.noteId;
 
-      $scope.note = angular.copy(getNote($stateParams.noteId));
+      $scope.note = NoteStore.getNote($scope.noteId);
+      console.log('Edit note ', $scope.note);
 
       $scope.save = function () {
-        updateNote($scope.note);
+        NoteStore.updateNote($scope.note);
+        $state.go('list')
+      }
+    })
+
+    .controller('AddCtrl', function ($scope, $state, NoteStore) {
+      $scope.note = {
+        id: new Date().getTime().toString(),
+        title: '',
+        description: ''
+      };
+
+      $scope.save = function () {
+        NoteStore.createNote($scope.note);
         $state.go('list')
       }
     })
