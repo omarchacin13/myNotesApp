@@ -1,0 +1,14 @@
+<ion-view view-title="{{title}}">
+  <ion-content>
+    <form ng-submit="register(user)">
+      <ion-list>
+        <input type="text" ng-model="user.name" placeholder="name"/>
+        <input type="text" ng-model="user.email" placeholder="email"/>
+        <input type="text" ng-model="user.password" placeholder="password"/>
+
+        <a class="button button-block button-balanced" ng-click="login(user)">Login</a>
+        <a class="button button-assertive button-block" ng-click="register(user)" >Register</a>
+      </ion-list>
+    </form>
+  </ion-content>
+</ion-view>

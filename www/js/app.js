@@ -27,12 +27,19 @@
           controller: 'AddCtrl'
         });
 
+      $stateProvider
+        .state('login', {
+          url:'/login',
+          templateUrl: 'templates/login.html',
+          controller: 'AuthCtrl'
+        });
 
-      $urlRouterProvider.otherwise('/list')
+
+      $urlRouterProvider.otherwise('/login')
 
     })
 
-    .controller('ListCtrl', function ($scope, NoteStore) {
+    .controller('ListCtrl', function ($scope, NoteStore, auth, $state) {
 
       $scope.reordering = false;
       $scope.notes = NoteStore.list();
@@ -48,12 +55,21 @@
 
       $scope.toggleReordering = function () {
         $scope.reordering = !$scope.reordering;
+      };
+
+      $scope.logout = function() {
+        auth.logout();
+        console.log('Loggin out');
+        $state.go('login');
       }
     })
 
     .controller('EditCtrl', function ($scope, $stateParams, $state, NoteStore) {
 
+      $scope.title = "Edit Grocery";
       $scope.noteId = $stateParams.noteId;
+      $scope.currentUser = auth.user;
+      console.log('Current user ', $scope.currentUser);
 
       $scope.note = NoteStore.getNote($scope.noteId);
       console.log('Edit note ', $scope.note);
@@ -65,6 +81,8 @@
     })
 
     .controller('AddCtrl', function ($scope, $state, NoteStore) {
+
+      $scope.title = "New Grocery";
       $scope.note = {
         id: new Date().getTime().toString(),
         title: '',
@@ -75,6 +93,47 @@
         NoteStore.createNote($scope.note);
         $state.go('list')
       }
+    })
+
+    .controller('AuthCtrl', function ($scope, auth, $state) {
+      $scope.title = 'AuthCtrl';
+
+      $scope.register = function(user) {
+        console.log('calling')
+        auth.register(user)
+          .then(function() {
+            console.log('Register successfully');
+            $state.go('list')
+          }, function(error) {
+            console.log('Error ', error);
+          });
+      };
+
+      $scope.login= function(user) {
+        auth.login(user)
+          .then(function() {
+            console.log('Login successfully');
+            $state.go('list')
+          }, function(error) {
+            console.log('Error ', error);
+          });
+      };
+
+      $scope.changePassword = function(user) {
+        auth.changePassword(user)
+          .then(function() {
+
+            /*Reset form*/
+            $scope.user.email = '';
+            $scope.user.oldPass = '';
+            $scope.user.newPass = '';
+
+            console.log('Password changed successfully')
+          }, function(error) {
+            console.log('error ', error);
+          })
+      }
+
     })
 
     .run(function($ionicPlatform) {
